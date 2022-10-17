@@ -1,33 +1,32 @@
 const express = require("express");
-const User = require("../models/user");
 const passport = require("passport");
-const bcrypt = require("bcryptjs");
 const router = express.Router();
+const UserModule = require("../modules/user-module");
+const User = require("../models/user");
+const bcrypt = require("bcryptjs");
 
 router.post("/signup", async (req, res) => {
-  const { name, email, password, phone } = req?.body;
-
+  // const { name, email, password, phone } = req?.body;
   try {
-    const candidate = await User.findOne({ email });
-
-    if (candidate) {
-      return res.status(400).json({
-        error: "email занят",
-        status: "error",
-      });
+    const candidate = await UserModule.findByEmail(req?.body);
+    if (!candidate) {
+      const user = await UserModule.create(req?.body);
+      if (user.error) {
+        return res.status(400).json({
+          error: user.error,
+          status: "error",
+        });
+      }
+      res.json({ data: user, status: "ok" });
     }
-    const passwordHash = await bcrypt.hash(password, 10);
-    const user = new User({ name, email, passwordHash, contactPhone: phone });
-    await user.save();
-
-    res.json({ data: user, status: "ok" });
   } catch (error) {
+    console.log(error);
     res.status(500).json(error);
   }
 });
 
 router.post("/signin", passport.authenticate("local", { failureMessage: true }), (req, res) => {
-  res.json("авторизован");
+  res.json({ auth: req.isAuthenticated() });
 });
 
 module.exports = router;
