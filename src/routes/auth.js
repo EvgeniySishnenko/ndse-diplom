@@ -6,7 +6,6 @@ const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 
 router.post("/signup", async (req, res) => {
-  // const { name, email, password, phone } = req?.body;
   try {
     const candidate = await UserModule.findByEmail(req?.body);
     if (!candidate) {
