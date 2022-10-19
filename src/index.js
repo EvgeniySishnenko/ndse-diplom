@@ -10,6 +10,7 @@ const socketIO = require("socket.io");
 const http = require("http");
 const { start, MONGODB_URI, SESSION_SECRET } = require("./config/");
 const authRouter = require("./routes/auth");
+const advertisementsRouter = require("./routes/advertisements");
 const User = require("./models/user");
 const UserModule = require("./modules/user-module");
 
@@ -70,6 +71,7 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.use("/api", authRouter);
+app.use("/api", advertisementsRouter);
 
 const PORT = start.PORT;
 

@@ -2,8 +2,6 @@ const express = require("express");
 const passport = require("passport");
 const router = express.Router();
 const UserModule = require("../modules/user-module");
-const User = require("../models/user");
-const bcrypt = require("bcryptjs");
 
 router.post("/signup", async (req, res) => {
   try {
@@ -19,7 +17,6 @@ router.post("/signup", async (req, res) => {
       res.json({ data: user, status: "ok" });
     }
   } catch (error) {
-    console.log(error);
     res.status(500).json(error);
   }
 });
