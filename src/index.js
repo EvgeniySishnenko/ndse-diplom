@@ -13,6 +13,7 @@ const authRouter = require("./routes/auth");
 const advertisementsRouter = require("./routes/advertisements");
 const User = require("./models/user");
 const UserModule = require("./modules/user-module");
+const fileMulter = require("./middleware/file");
 
 const verify = async (email, password, done) => {
   try {
@@ -55,9 +56,10 @@ passport.deserializeUser(async (id, cb) => {
 });
 
 const app = express();
-
+app.use(fileMulter.single("images"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use("src/public/img", express.static(path.join(__dirname, "/public/img")));
 
 app.use(
   session({

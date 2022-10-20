@@ -14,7 +14,7 @@ const advertisementsSchema = new Schema({
       type: String,
     },
   ],
-  isDeleted: { type: Boolean, require: true },
+  isDeleted: { type: Boolean, require: true, default: false },
 });
 
 module.exports = model("Advertisements ", advertisementsSchema);
