@@ -5,6 +5,7 @@ const session = require("express-session");
 const bcrypt = require("bcryptjs");
 const MongoStore = require("connect-mongodb-session")(session);
 const passport = require("passport");
+const bodyParser = require("body-parser");
 const LocalStrategy = require("passport-local").Strategy;
 const socketIO = require("socket.io");
 const http = require("http");
@@ -15,18 +16,20 @@ const User = require("./models/user");
 const UserModule = require("./modules/user-module");
 const fileMulter = require("./middleware/file");
 
-const verify = async (email, password, done) => {
-  try {
-    const user = await UserModule.findByEmail({ email });
-    if (!user) return done(null, false);
-
-    const areSame = await bcrypt.compare(password, user.passwordHash);
-    if (!areSame) return done(null, false);
-
-    return done(null, user);
-  } catch (error) {
-    return done(error);
-  }
+const verify = (email, password, done) => {
+  User.findOne({ email }, (err, user) => {
+    if (err) {
+      return done(err);
+    }
+    if (!user) {
+      return done(null, false);
+    }
+    bcrypt.compare(password, user.passwordHash, (err, res) => {
+      if (err) return done(err);
+      if (res === false) return done(null, false, { message: "Некорректный пароль" });
+      return done(null, user);
+    });
+  });
 };
 
 const options = {
@@ -34,25 +37,19 @@ const options = {
   passwordField: "password",
 };
 
-const store = new MongoStore({
-  collection: "sessions",
-  uri: MONGODB_URI,
-});
-
 passport.use("local", new LocalStrategy(options, verify));
 
 passport.serializeUser((user, cb) => {
-  cb(null, user.id);
+  return cb(null, user.id);
 });
 
-passport.deserializeUser(async (id, cb) => {
-  try {
-    const user = await User.findById(id);
-    if (!user) cb(null, false);
-    return cb(null, user);
-  } catch (error) {
-    cb(error);
-  }
+passport.deserializeUser((id, cb) => {
+  User.findById(id, (err, user) => {
+    if (err) {
+      return cb(err);
+    }
+    cb(null, user);
+  });
 });
 
 const app = express();
@@ -66,7 +63,6 @@ app.use(
     secret: SESSION_SECRET,
     resavePath: true,
     saveUnitialized: false,
-    store: store,
   })
 );
 app.use(passport.initialize());
